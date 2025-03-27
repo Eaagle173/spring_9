@@ -7,6 +7,6 @@ import ru.vizgalin.SecurityApp.models.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    @Query("Select u from User u left join fetch u.roles where u.username=:username")
+    @Query("Select u from User u left join fetch u.roles where u.email=:username")
     User findByUsername(String username);
 }
