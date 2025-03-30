@@ -5,7 +5,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .full-height-sidebar {
-            min-height: 100vh; /* Минимальная высота = высота экрана */
+            min-height: 100vh;
         }
 
         .main-content {
@@ -19,8 +19,8 @@
         }
 
         .custom-list-group .list-group-item.active {
-            background-color: rgb(43, 60, 177); /* Легкая голубая подсветка */
-            color: #ffffff; /* Цвет текста как у Bootstrap */
+            background-color: rgb(43, 60, 177);
+            color: #ffffff;
         }
     </style>
 </head>
@@ -32,7 +32,7 @@
             with roles:
             <span th:text="${formattedRoles}"></span>
         </span>
-        <form th:action="@{/login-page}" method="post">
+        <form th:action="@{/logout}" method="post">
             <button type="submit" class="btn btn-outline-light">Logout</button>
         </form>
     </div>

@@ -7,14 +7,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import ru.vizgalin.SecurityApp.models.Role;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import ru.vizgalin.SecurityApp.models.User;
 import ru.vizgalin.SecurityApp.services.RoleServiceImpl;
 import ru.vizgalin.SecurityApp.services.UserServiceImpl;
 
 import java.security.Principal;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,7 +39,7 @@ public class AdminPageController {
     public String userPanel(Principal principal, Model model) {
         User user = userServiceImpl.findByUserName(principal.getName());
         model.addAttribute("user", user);
-        model.addAttribute("formattedRoles", formatRoles(user.getRoles()));
+        model.addAttribute("formattedRoles", roleServiceImpl.formatRoles(user.getRoles()));
         return "user";
     }
 
@@ -47,11 +48,11 @@ public class AdminPageController {
     public String adminPanel(Principal principal, Model model) {
         User currentUser = userServiceImpl.findByUserName(principal.getName());
         List<User> allUsers = userServiceImpl.findAllUsers().stream()
-                .peek(u -> u.setFormattedRoles(formatRoles(u.getRoles())))
+                .peek(u -> u.setFormattedRoles(roleServiceImpl.formatRoles(u.getRoles())))
                 .collect(Collectors.toList());
 
         model.addAttribute("currentUser", currentUser);
-        model.addAttribute("formattedRoles", formatRoles(currentUser.getRoles()));
+        model.addAttribute("formattedRoles", roleServiceImpl.formatRoles(currentUser.getRoles()));
         model.addAttribute("allUsers", allUsers);
         model.addAttribute("allRoles", roleServiceImpl.getAllRoles());
         return "admin";
@@ -64,25 +65,9 @@ public class AdminPageController {
         return "redirect:/admin";
     }
 
-    @GetMapping("/admin/edit-user")
-    @PreAuthorize("hasRole('ADMIN')")
-    public String editUserForm(@RequestParam Long id, Model model) {
-        model.addAttribute("user", userServiceImpl.findById(id));
-        model.addAttribute("allRoles", roleServiceImpl.getAllRoles());
-        return "edit-user";
-    }
-
-//    @PostMapping("/admin/update-user")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public String updateUser(@ModelAttribute("user") User user,
-//                             @RequestParam(value = "password", required = false) String newPassword) {
-//        userServiceImpl.updateUser(user, newPassword);
-//        return "redirect:/admin";
-//    }
-
     @PostMapping("/admin/update-user")
     @PreAuthorize("hasRole('ADMIN')")
-    public String updateUserById(@ModelAttribute("updateUserId") User user,
+    public String updateUserById(@ModelAttribute("updatedUser") User user,
                                  @RequestParam(value = "password", required = false) String newPassword,
                                  Principal principal) {
         User updatedUser = userServiceImpl.findById(user.getId());
@@ -103,42 +88,13 @@ public class AdminPageController {
 
     @PostMapping("/admin/delete-user")
     @PreAuthorize("hasRole('ADMIN')")
-    public String deleteUser(@RequestParam Long id, Principal principal) {
-        if (principal.getName().equals(userServiceImpl.findById(id).getUsername())) {
-            userServiceImpl.deleteUser(id);
+    public String deleteUser(@ModelAttribute("updatedUser") User user, Principal principal) {
+        if (principal.getName().equals(userServiceImpl.findById(user.getId()).getUsername())) {
+            userServiceImpl.deleteUser(user.getId());
             return "redirect:/login-page";
         }
-        userServiceImpl.deleteUser(id);
+
+        userServiceImpl.deleteUser(user.getId());
         return "redirect:/admin";
-    }
-
-
-//    @GetMapping
-//    public String showAllUsers(Model model, Principal principal) {
-//        User currentUser = userServiceImpl.findByUserName(principal.getName());
-//
-//        String formattedRoles = currentUser.getRoles().stream()
-//                .map(role -> role.toString().replace("ROLE_", ""))
-//                .collect(Collectors.joining(" "));
-//
-//        List<User> users = userServiceImpl.findAllUsers().stream()
-//                .peek(user -> {
-//                    String rolesFormatted = user.getRoles().stream()
-//                            .map(role -> role.toString().replace("ROLE_", ""))
-//                            .collect(Collectors.joining(" "));
-//                    user.setFormattedRoles(rolesFormatted);
-//                })
-//                .collect(Collectors.toList());
-//
-//        model.addAttribute("formattedRoles", formattedRoles);
-//        model.addAttribute("username", principal.getName());
-//        model.addAttribute("allUsers", users);
-//        return "admin";
-//    }
-
-    private String formatRoles(Collection<Role> roles) {
-        return roles.stream()
-                .map(role -> role.getName().replace("ROLE_", ""))
-                .collect(Collectors.joining(" "));
     }
 }
